@@ -1,0 +1,6 @@
+# rust
+target
+# bitcoin regtest data dir
+test
+# electrs
+db
