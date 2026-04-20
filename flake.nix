@@ -66,6 +66,9 @@
 						pkgs.jq
 						bitcoin
 						electrs
+
+						# development tools
+						pkgs.just
 					];
 
 					shellHook = ''
@@ -91,19 +94,22 @@
 							echo "- \`genblocks\`: Generate blocks in regtest"
 							echo "- \`setmineaddr\`: Set the mining address"
 							echo "- \`getheight\`: Get the current block height"
+							echo "- \`estart\`: Start electrum in this dev env"
 							echo "- \`gethelp\`: Get help for commands in this dev env"
 							echo "-------------------------------------------"
 						}
 
 						# Define aliases
 						alias bcli="$BITCOIN_CLI -regtest --rpcconnect=$BITCOIND_RPC_HOST --rpcport=$BITCOIND_RPC_PORT --rpccookiefile=$BITCOIND_COOKIE"
-						alias bstart="$BITCOIND -regtest -datadir=$BITCOIN_DATADIR -server=1 -txindex=1 -fallbackfee=0.0002"
+						alias bstart="$BITCOIND -regtest -datadir=$BITCOIN_DATADIR -server=1 -txindex=1 -fallbackfee=0.0002 -minimumchainwork=0"
 						alias listwallets="bcli listwallets"
 						alias createwallet="bcli createwallet"
 						alias genblocks="bcli -generate"
 						alias setmineaddr="bcli setgenerate true"
 						alias getheight="bcli getblockcount"
 						alias gethelp="printStartupMessage"
+						alias estart="electrs --log-filters INFO --db-dir=$HOME/db/regtest --electrum-rpc-addr=0.0.0.0:50001 --daemon-rpc-addr=0.0.0.0:$BITCOIND_RPC_PORT --network=regtest --cookie-file=$BITCOIND_COOKIE"
+
 
 						# Create the BITCOIN_DATADIR if it does not exist
 						mkdir -p "$BITCOIN_DATADIR"
