@@ -7,20 +7,32 @@ rpc_host := "127.0.0.1"
 rpc_port := "18443"
 rpc_user := "myuser"
 rpc_password := "mypass"
+cookie := datadir + "/regtest/.cookie"
 electrs_db := env_var('HOME') + "/db/regtest"
 
 # escrow wallet
 escrow_wallet := 'escrow_wallet'
 
-bcli := "bitcoin-cli -regtest --rpcconnect=" + rpc_host + " --rpcport=" + rpc_port + " --rpcuser=" + rpc_user + " --rpcpassword=" + rpc_password
+# the cookie file only exists when bitcoind runs in cookie mode (start-cookie),
+# so its presence tells the clients which auth to use
+rpc_auth := if path_exists(cookie) == "true" { "--rpccookiefile=" + cookie } else { "--rpcuser=" + rpc_user + " --rpcpassword=" + rpc_password }
+electrs_auth := if path_exists(cookie) == "true" { "--cookie-file=" + cookie } else { "--conf=" + justfile_directory() + "/electrs.toml" }
+
+bcli := "bitcoin-cli -regtest --rpcconnect=" + rpc_host + " --rpcport=" + rpc_port + " " + rpc_auth
 
 # list of recipes
 default:
   just --list
 
-# start regtest bitcoind
+# start regtest bitcoind with fixed rpcuser/rpcpassword
 [group('rpc')]
 start:
+    mkdir -p "{{datadir}}"
+    bitcoind -conf={{conf}} -datadir={{datadir}} -rpcuser={{rpc_user}} -rpcpassword={{rpc_password}}
+
+# start regtest bitcoind with cookie auth (regenerated on every start)
+[group('rpc')]
+start-cookie:
     mkdir -p "{{datadir}}"
     bitcoind -conf={{conf}} -datadir={{datadir}}
 
@@ -38,7 +50,7 @@ reset: stop
 # start electrs indexer
 [group('rpc')]
 electrum:
-    electrs --conf={{justfile_directory()}}/electrs.toml --log-filters INFO --db-dir={{electrs_db}} --electrum-rpc-addr=0.0.0.0:50001 --daemon-rpc-addr=0.0.0.0:{{rpc_port}} --network=regtest
+    electrs {{electrs_auth}} --log-filters INFO --db-dir={{electrs_db}} --electrum-rpc-addr=0.0.0.0:50001 --daemon-rpc-addr=0.0.0.0:{{rpc_port}} --network=regtest
 
 # get blockchain info
 [group('rpc')]
