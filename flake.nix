@@ -72,49 +72,10 @@
 					];
 
 					shellHook = ''
-						BITCOIN_DATADIR=$PWD/test/bitcoin
-						BITCOIN_CLI=bitcoin-cli
-						BITCOIND=bitcoind
-
-						BITCOIND_RPC_PORT=18443
-						BITCOIND_RPC_HOST=127.0.0.1
-						BITCOIND_URL=http://$BITCOIND_RPC_HOST:$BITCOIND_RPC_PORT
-						BITCOIND_COOKIE=$BITCOIN_DATADIR/regtest/.cookie
-
-						# Define a function to print the startup message
-						printStartupMessage() {
-							echo "-------------------------------------------"
-							echo "Welcome to the Bitcoin Development Environment"
-							echo "-------------------------------------------"
-							echo "Available commands:"
-							echo "- \`bstart\`: Start the Bitcoin regtest"
-							echo "- \`bcli\`: Use the Bitcoin CLI"
-							echo "- \`listwallets\`: Get the list of wallets created"
-							echo "- \`createwallet\`: Create regtest wallet (createwallet "testwallet")"
-							echo "- \`genblocks\`: Generate blocks in regtest"
-							echo "- \`setmineaddr\`: Set the mining address"
-							echo "- \`getheight\`: Get the current block height"
-							echo "- \`estart\`: Start electrum in this dev env"
-							echo "- \`gethelp\`: Get help for commands in this dev env"
-							echo "-------------------------------------------"
-						}
-
-						# Define aliases
-						alias bcli="$BITCOIN_CLI -regtest --rpcconnect=$BITCOIND_RPC_HOST --rpcport=$BITCOIND_RPC_PORT --rpccookiefile=$BITCOIND_COOKIE"
-						alias bstart="$BITCOIND -regtest -datadir=$BITCOIN_DATADIR -server=1 -txindex=1 -fallbackfee=0.0002 -minimumchainwork=0"
-						alias listwallets="bcli listwallets"
-						alias createwallet="bcli createwallet"
-						alias genblocks="bcli -generate"
-						alias setmineaddr="bcli setgenerate true"
-						alias getheight="bcli getblockcount"
-						alias gethelp="printStartupMessage"
-						alias estart="electrs --log-filters INFO --db-dir=$HOME/db/regtest --electrum-rpc-addr=0.0.0.0:50001 --daemon-rpc-addr=0.0.0.0:$BITCOIND_RPC_PORT --network=regtest --cookie-file=$BITCOIND_COOKIE"
-
-
-						# Create the BITCOIN_DATADIR if it does not exist
-						mkdir -p "$BITCOIN_DATADIR"
-
-						printStartupMessage
+						echo "-------------------------------------------"
+						echo "Welcome to the Bitcoin Development Environment"
+						echo "-------------------------------------------"
+						echo "Run \`just\` to see the available commands."
 					'';
 				};
 			}

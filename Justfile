@@ -2,15 +2,17 @@ set quiet := true
 msrv := "1.75.0"
 default_wallet := 'regtest_default_wallet'
 datadir := justfile_directory() + "/test/bitcoin"
+conf := justfile_directory() + "/bitcoin.conf"
 rpc_host := "127.0.0.1"
 rpc_port := "18443"
-cookie := datadir + "/regtest/.cookie"
+rpc_user := "myuser"
+rpc_password := "mypass"
 electrs_db := env_var('HOME') + "/db/regtest"
 
 # escrow wallet
 escrow_wallet := 'escrow_wallet'
 
-bcli := "bitcoin-cli -regtest --rpcconnect=" + rpc_host + " --rpcport=" + rpc_port + " --rpccookiefile=" + cookie
+bcli := "bitcoin-cli -regtest --rpcconnect=" + rpc_host + " --rpcport=" + rpc_port + " --rpcuser=" + rpc_user + " --rpcpassword=" + rpc_password
 
 # list of recipes
 default:
@@ -20,22 +22,23 @@ default:
 [group('rpc')]
 start:
     mkdir -p "{{datadir}}"
-    bitcoind -regtest -datadir={{datadir}} -server=1 -txindex=1 -fallbackfee=0.0002 -minimumchainwork=0
+    bitcoind -conf={{conf}} -datadir={{datadir}}
 
-# stop regtest bitcoind
+# stop regtest bitcoind (no-op if not running)
 [group('rpc')]
 stop:
-    pkill bitcoind
+    pkill -x bitcoind || true
 
 # stop and delete regtest bitcoind data
 [group('rpc')]
 reset: stop
+    while pgrep -x bitcoind > /dev/null; do sleep 0.5; done
     rm -rf {{datadir}}
 
 # start electrs indexer
 [group('rpc')]
 electrum:
-    electrs --log-filters INFO --db-dir={{electrs_db}} --electrum-rpc-addr=0.0.0.0:50001 --daemon-rpc-addr=0.0.0.0:{{rpc_port}} --network=regtest --cookie-file={{cookie}}
+    electrs --conf={{justfile_directory()}}/electrs.toml --log-filters INFO --db-dir={{electrs_db}} --electrum-rpc-addr=0.0.0.0:50001 --daemon-rpc-addr=0.0.0.0:{{rpc_port}} --network=regtest
 
 # get blockchain info
 [group('rpc')]
@@ -101,13 +104,3 @@ descriptors private wallet=default_wallet:
 [group('rpc-default')]
 rpc command wallet=default_wallet:
     {{bcli}} -rpcwallet={{wallet}} {{command}}
-
-# broadcast a raw transaction
-[group('rpc-default')]
-escrow_broadcast tx_hex wallet=default_wallet:
-    {{bcli}} -rpcwallet={{wallet}} sendrawtransaction {{tx_hex}}
-
-# list unspent utxos in escrow wallet
-[group('rpc-default')]
-escrow_utxos wallet=default_wallet:
-    {{bcli}} -rpcwallet={{wallet}} listunspent

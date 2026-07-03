@@ -1,0 +1,4 @@
+# electrs config for the regtest dev environment.
+# electrs doesn't allow passing credentials on the command line,
+# so RPC auth lives here. Must match rpcuser/rpcpassword in bitcoin.conf.
+auth = "myuser:mypass"
